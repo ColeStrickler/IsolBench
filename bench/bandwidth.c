@@ -115,9 +115,30 @@ void usage(int argc, char *argv[])
 	printf("-l: log label. use together with -f\n");
 	printf("-f: log file name\n");
 	printf("-h: help\n");
+	printf("-z: use huge pages for memory allocationg\n");
 	printf("\nExamples: \n$ bandwidth -m 8192 -a read -t 1 -c 2\n  <- 8MB read for 1 second on CPU 2\n");
 	exit(1);
 }
+
+
+void alloc_memblock(int use_huge_pages)
+{
+	if (!use_huge_pages)
+		g_mem_ptr = (int *)malloc(g_mem_size);
+	else
+	{
+		// attempt to map the region using huge pages
+		g_mem_ptr = (int *)mmap(NULL, g_mem_size, PROT_READ | PROT_WRITE,
+                           MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_POPULATE,
+                           -1, 0);
+		if (!g_mem_ptr)
+		{
+			printf("mmap() failed to utilize huge pages for allocatation.\n");
+			quit(-1);
+		}
+	}
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -131,11 +152,12 @@ int main(int argc, char *argv[])
 	int iterations = 0;
 	int i;
 	struct sched_param param;
+	int use_huge_pages = 0;
 
 	/*
 	 * get command line options 
 	 */
-	while ((opt = getopt(argc, argv, "m:a:n:t:c:i:p:r:f:l:xh")) != -1) {
+	while ((opt = getopt(argc, argv, "m:a:n:t:c:i:p:r:f:l:xhz")) != -1) {
 		switch (opt) {
 		case 'm': /* set memory size */
 			g_mem_size = 1024 * strtol(optarg, NULL, 0);
@@ -185,14 +207,17 @@ int main(int argc, char *argv[])
 		case 'h': 
 			usage(argc, argv);
 			break;
+		case 'z':
+			use_huge_pages = 1;
+			break;
 		}
 	}
 
 	/*
 	 * allocate contiguous region of memory 
-	 */ 
-	g_mem_ptr = (int *)malloc(g_mem_size);
-
+	 */
+	alloc_memblock(use_huge_pages);
+	
 	memset((char *)g_mem_ptr, 1, g_mem_size);
 
 	for (i = 0; i < g_mem_size / sizeof(int); i++)
