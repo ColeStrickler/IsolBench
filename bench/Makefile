@@ -1,8 +1,8 @@
 CC=gcc
 CXX=g++
-PGMS=latency latency-mlp bandwidth pagetype bandwidth-rt
+PGMS=latency latency-mlp bandwidth pagetype bandwidth-rt BkPLL
 
-CFLAGS=-O2 -Wall -g
+CFLAGS=-O1 -Wall -g
 CXXFLAGS=$(CFLAGS)
 LDFLAGS=-Wl,--no-as-needed -lrt
 
@@ -15,6 +15,9 @@ bandwidth: bandwidth.o
 bandwidth-rt: bandwidth-rt.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@ -lpthread
 pagetype: pagetype.o
+
+BkPLL: BkPLL.o
+	$(CXX) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 install:
 	cp -v $(PGMS) /usr/local/bin
