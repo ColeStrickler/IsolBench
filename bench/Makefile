@@ -1,6 +1,6 @@
 CC=riscv64-unknown-linux-gnu-gcc
 CXX=riscv64-unknown-linux-gnu-g++
-PGMS=latency latency-mlp bandwidth pagetype bandwidth-rt
+PGMS=latency latency-mlp bandwidth pagetype bandwidth-rt BkPLL
 
 CFLAGS=-O2 -Wall -g
 CXXFLAGS=$(CFLAGS)
@@ -16,6 +16,7 @@ all: $(PGMS)
 	mv bandwidth build/
 	mv bandwidth-rt build/
 	mv pagetype build/
+	mv BkPLL build/
 	
 
 latency: latency.o
@@ -25,8 +26,10 @@ bandwidth: bandwidth.o
 bandwidth-rt: bandwidth-rt.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@ -lpthread
 pagetype: pagetype.o
-
+	$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@ -lpthread
+BkPLL: BkPLL.o
+	$(CXX) $(CFLAGS) $(LDFLAGS) $< -o $@ -lpthread
 install:
 	cp -v $(PGMS) /usr/local/bin
 clean:
-	rm *.o *~ $(PGMS)
+	rm -rf *.o *~ build/
